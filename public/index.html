@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Socket.io Chat Rooms</title>
+    <style>
+        body { display: flex; font-family: Arial, sans-serif; height: 100vh; margin: 0; background-color: #f9f9f9; }
+        #sidebar { width: 250px; background: #2c3e50; color: white; padding: 20px; display: flex; flex-direction: column; }
+        #main { flex-grow: 1; display: flex; flex-direction: column; padding: 20px; }
+        #messages { flex-grow: 1; border: 1px solid #ddd; background: white; padding: 15px; overflow-y: auto; margin-bottom: 15px; border-radius: 5px; }
+        .room, .user { padding: 8px; margin-bottom: 5px; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
+        .room:hover { background: #34495e; }
+        .active-room { background: #3498db !important; font-weight: bold; }
+        .user { cursor: default; background: #1a252f; }
+        h3 { border-bottom: 1px solid #455a64; padding-bottom: 5px; margin-top: 0; }
+        .input-area { display: flex; gap: 10px; }
+        input { flex-grow: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 20px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #2980b9; }
+    </style>
+</head>
+<body>
+
+    <div id="sidebar">
+        <h3>Rooms</h3>
+        <div id="room-list"></div>
+        
+        <h3 style="margin-top: 20px;">Active Users</h3>
+        <div id="user-list"></div>
+    </div>
+
+    <div id="main">
+        <h2 id="room-title">General Room</h2>
+        <div id="messages"></div>
+        <div class="input-area">
+            <input type="text" id="msg-input" placeholder="Type your message here..." autocomplete="off">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        let currentRoom = 'General';
+
+        // Update UI when room list is received from server
+        socket.on('update_rooms', (rooms) => {
+            const roomList = document.getElementById('room-list');
+            roomList.innerHTML = '';
+            rooms.forEach(room => {
+                const div = document.createElement('div');
+                div.className = 'room ' + (room === currentRoom ? 'active-room' : '');
+                div.innerText = room;
+                div.onclick = () => joinRoom(room);
+                roomList.appendChild(div);
+            });
+        });
+
+        // Update UI when active user list is received from server
+        socket.on('update_users', (users) => {
+            const userList = document.getElementById('user-list');
+            userList.innerHTML = '';
+            users.forEach(user => {
+                const div = document.createElement('div');
+                div.className = 'user';
+                div.innerText = user;
+                userList.appendChild(div);
+            });
+        });
+
+        // Print new incoming messages to screen
+        socket.on('receive_message', (data) => {
+            const messages = document.getElementById('messages');
+            const color = data.sender === 'System' ? 'color: gray; font-style: italic;' : '';
+            messages.innerHTML += `<div style="margin-bottom: 8px; ${color}"><strong>${data.sender}:</strong> ${data.text}</div>`;
+            messages.scrollTop = messages.scrollHeight; // Auto scroll to bottom
+        });
+
+        function joinRoom(room) {
+            if (currentRoom === room) return; // Do nothing if already in this room
+            
+            currentRoom = room;
+            document.getElementById('room-title').innerText = room + ' Room';
+            document.getElementById('messages').innerHTML = ''; // Clear old messages
+            
+            socket.emit('join_room', room);
+
+            // Mark the clicked room as active
+            document.querySelectorAll('.room').forEach(el => {
+                el.classList.remove('active-room');
+                if(el.innerText === room) el.classList.add('active-room');
+            });
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('msg-input');
+            const message = input.value.trim();
+            if (message !== '') {
+                socket.emit('send_message', message);
+                input.value = ''; // Clear input
+            }
+        }
+
+        // Convenience: Send message with Enter key
+        document.getElementById('msg-input').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
