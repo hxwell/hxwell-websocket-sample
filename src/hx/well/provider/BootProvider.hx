@@ -6,9 +6,9 @@ import hx.well.handler.WebSocketSample;
 class BootProvider extends AbstractProvider {
     public function boot():Void {
         Route.websocket("/socket.io")
-			.handler(new SocketIOSample());
+			.handler(new SocketIOChatHandler());
 
-        Route.websocket("/ws")
-            .handler(new WebSocketSample());
+        Route.websocket("/echo")
+            .handler(new WebSocketEchoHandler());
     }
 }

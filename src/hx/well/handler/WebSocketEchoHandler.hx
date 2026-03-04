@@ -3,7 +3,7 @@ import hx.well.websocket.AbstractWebSocketHandler;
 import hx.well.websocket.WebSocketSession;
 import haxe.io.Bytes;
 import haxe.Exception;
-class WebSocketSample extends AbstractWebSocketHandler {
+class WebSocketEchoHandler extends AbstractWebSocketHandler {
     public function onOpen(session:WebSocketSession):Void {
         trace("WebSocket connection opened: " + session.id);
     }

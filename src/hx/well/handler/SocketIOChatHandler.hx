@@ -3,7 +3,7 @@ package hx.well.handler;
 import hx.well.websocket.socketio.SocketIOHandler;
 import hx.well.websocket.socketio.SocketIOSession;
 
-class SocketIOSample extends SocketIOHandler {
+class SocketIOChatHandler extends SocketIOHandler {
     var _rooms:Array<String> = ["General", "Test"];
 
     public function onConnection(socket:SocketIOSession):Void {
